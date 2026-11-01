@@ -1,0 +1,1 @@
+Keep this project independent of installations. Never commit credentials, real sessions, endpoints, player data, binary fixtures, deployment histories or operational reports. Use synthetic tests. Never publish third-party binaries without verifying their licenses.

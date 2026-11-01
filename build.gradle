@@ -1,0 +1,39 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+group = 'io.github.framecompat'
+version = '0.1.0'
+repositories { mavenCentral() }
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+dependencies {
+    implementation 'org.ow2.asm:asm:9.8'
+    compileOnly 'io.netty:netty-buffer:4.1.97.Final'
+    compileOnly 'io.netty:netty-codec:4.1.97.Final'
+    testImplementation 'io.netty:netty-buffer:4.1.97.Final'
+    testImplementation 'io.netty:netty-codec:4.1.97.Final'
+    testImplementation 'io.netty:netty-transport:4.1.97.Final'
+    testImplementation 'com.github.luben:zstd-jni:1.5.7-7'
+}
+application { mainClass = 'io.github.framecompat.ZstdNetFramePatch' }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.register('regression', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'io.github.framecompat.FrameRegression'
+    jvmArgs '-Xverify:all', '-Dio.netty.leakDetection.level=paranoid'
+}
+tasks.register('integration', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'io.github.framecompat.PatchIntegration'
+    if (project.hasProperty('upstreamJar')) args project.property('upstreamJar')
+}
+tasks.named('check') { dependsOn regression }
+
+// Standalone regression programs are run above; no JUnit engine is used.
+tasks.named('test') { enabled = false }
+
+distributions {
+    main { contents { from('LICENSE', 'THIRD_PARTY_NOTICES.md') } }
+}
